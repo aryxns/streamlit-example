@@ -1,38 +1,75 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
 import streamlit as st
+import hnpy
+import requests
 
+
+hn = hnpy.HackerNews()
+st.title("HN Browser")
+
+menu = ["Home","Show", "Jobs", "Posts"]
+choice = st.sidebar.selectbox("Menu", menu)
+
+if choice == "Home":
+    st.header("Welcome to HN Browser")
+    st.write("--------------------------------------")
+    st.markdown("HN Browser allows you to get the best of Hacker News with a **simplified UI** with added **functionality.**")
+elif choice == "Show":
+    st.subheader("HN Show")
+    st.write("----------------------------------")
+    query = st.sidebar.text_input("Search: ")
+    if st.sidebar.button("Show"):
+        for post in hn.show(limit=5):
+            if str(query) in str(post.title):
+                st.write(post.title) 
+                st.write(post.content)
+                st.write("----------------------------------")
+    elif st.sidebar.button("Latest"):
+        for post in hn.show(limit=5):
+            st.write(post.title)
+            if len(post.content) < 500:
+                    st.write(post.content)
+            elif len(post.content) > 500:
+                    st.write(post.link)
+            st.write("----------------------------------")
+
+elif choice == "Jobs":
+    st.subheader("Job Index")
+    st.write("----------------------------------")
+    role = st.sidebar.text_input("Enter role: ")
+    if st.sidebar.button("Load Jobs"):
+        for post in hn.jobs(limit=10):
+            if str(role) in str(post.title):
+                st.write(post.title)
+                st.write(post.content)
+                st.write("----------------------------------")
+                
+elif choice == "Posts":
+    st.subheader("Post Section")
+    st.write("----------------------------------")
+    query = st.sidebar.text_input("Search for a post: ")
+    if st.sidebar.button("Search"):
+        for post in hn.top():
+            if str(query) in str(post.title):
+                st.write(post.title)
+                st.write(post.link)
+                st.write()
+
+    elif st.sidebar.button("Latest Posts"):
+        for post in hn.top(limit=5):
+            st.write(post.title + " " + post.link)
+            st.write("----------------------------------")
+    elif st.sidebar.button("Best Posts"):
+        for post in hn.best(limit=5):
+            st.write(post.title)
+            st.write(post.link)
+            st.write("----------------------------------")
+                
+
+
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
 """
-# Welcome to Streamlit!
-
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
-
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
-
-
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
-
-    Point = namedtuple('Point', 'x y')
-    data = []
-
-    points_per_turn = total_points / num_turns
-
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
-
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
